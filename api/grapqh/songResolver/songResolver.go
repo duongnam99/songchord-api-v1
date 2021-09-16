@@ -8,21 +8,21 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// var commentType = graphql.NewObject(graphql.ObjectConfig{
-// 	Name:        "Comment",
-// 	Description: "Comments for song",
-// 	Fields: graphql.Fields{
-// 		"name": &graphql.Field{
-// 			Type: graphql.String,
-// 		},
-// 		"email": &graphql.Field{
-// 			Type: graphql.String,
-// 		},
-// 		"content": &graphql.Field{
-// 			Type: graphql.String,
-// 		},
-// 	},
-// })
+var commentType = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name:        "Comment",
+	Description: "Comments for song",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"name": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"email": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"content": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+	},
+})
 
 var productType = graphql.NewObject(
 	graphql.ObjectConfig{
@@ -40,10 +40,10 @@ var productType = graphql.NewObject(
 			"category": &graphql.Field{
 				Type: graphql.String,
 			},
-			// "comments": &graphql.Field{
-			// 	Type:        graphql.NewList(commentType),
-			// 	Description: "The list of comment",
-			// },
+			"comments": &graphql.Field{
+				Type:        graphql.NewList(commentType),
+				Description: "The list of comment",
+			},
 		},
 	},
 )
@@ -135,9 +135,9 @@ var mutationType = graphql.NewObject(graphql.ObjectConfig{
 				"category": &graphql.ArgumentConfig{
 					Type: graphql.String,
 				},
-				// "comments": &graphql.ArgumentConfig{
-				// 	Type: graphql.(commentType),
-				// },
+				"comments": &graphql.ArgumentConfig{
+					Type: commentType,
+				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				song := models.Song{}
@@ -153,17 +153,15 @@ var mutationType = graphql.NewObject(graphql.ObjectConfig{
 				if category, categoryOk := params.Args["description"].(string); categoryOk {
 					song.Category = category
 				}
-				// log.Fatalln(params)
-				// log.Fatalln(params.Args["comments"])
-				// if _, commentsOK := params.Args["comments"].(string); commentsOK {
-				// song.Comment = []models.Comment{
-				// 	{
-				// 		"harry",
-				// 		"harry@outcubator.com",
-				// 		"the first comment",
-				// 	},
-				// }
-				// }
+				if comments, commentsOK := params.Args["comments"].(map[string]interface{}); commentsOK {
+					song.Comment = append(song.Comment, models.Comment{
+						Name:    comments["name"].(string),
+						Email:   comments["email"].(string),
+						Content: comments["content"].(string),
+					})
+				}
+				// log.Fatalln(song.Comment)
+
 				if err := songRepo.UpdateSong(context.Background(), song); err != nil {
 					return nil, err
 				}
@@ -215,21 +213,5 @@ mutation {
     category
   }
 }
-
-mutation CreateReviewForEpisode($ep: Episode!, $review: ReviewInput!) {
-  createReview(episode: $ep, review: $review) {
-    stars
-    commentary
-  }
-}
-{
-  "ep": "JEDI",
-  "review": {
-    "stars": 5,
-    "commentary": "This is a great movie!"
-  }
-}
-
-{name: "asdf", email: "minhnam@gmail.com", content: "It's ok"}
 
 */

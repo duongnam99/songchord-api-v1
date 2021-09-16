@@ -5,7 +5,7 @@ type Song struct {
 	Content  string
 	Author   string
 	Category string
-	// Comment  []Comment
+	Comment  []Comment
 }
 
 type Comment struct {

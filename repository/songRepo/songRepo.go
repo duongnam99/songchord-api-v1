@@ -37,7 +37,16 @@ func InsertSong(ctx context.Context, song models.Song) error {
 	return err
 }
 func UpdateSong(ctx context.Context, song models.Song) error {
+	var songModel models.Song
+	col := driver.Mongo.ConnectCollection("song_chords", "songs")
 	filter := bson.M{"title": song.Title}
+
+	// get existing comment
+	record := col.FindOne(ctx, bson.M{"title": song.Title})
+	record.Decode(&songModel)
+	songModel.Comment = append(songModel.Comment, song.Comment[0])
+	song.Comment = songModel.Comment
+
 	update := bson.M{"$set": song}
 	upsertBool := true
 	updateOption := options.UpdateOptions{
